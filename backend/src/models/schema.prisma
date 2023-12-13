@@ -1,0 +1,245 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+/// Always after the prisma-client-js generator
+generator json {
+  provider  = "prisma-json-types-generator"
+  namespace = "PrismaJson"
+  // clientOutput = "<finds it automatically>"
+  // (./ -> relative to schema, or an importable path to require() it)
+  // useType = "MyType"
+  // In case you need to use a type, export it inside the namespace and we will add a index signature to it
+  // (e.g.  export namespace PrismaJson { export type MyType = {a: 1, b: 2} }; will generate namespace.MyType["TYPE HERE"])
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String             @id @default(uuid()) // licence id for a driver in this case 
+  name                  String
+  email                 String             @unique // obligatory cause we will use Google sign in 
+  address               String?
+  photo                 String?            @default("https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/1200px-Default_pfp.svg.png")
+  cloud_photo           CloudPhotoDetails?
+  phone_number          String
+  created_at            DateTime           @default(now())
+  isDeleted             Boolean            @default(false)
+  isValid               Boolean            @default(true)
+  hashedPassword        String?
+  role                  Role               @default(REGULAR)
+  driver                Driver?            @relation("UserDriver")
+  /// [Point]
+  localisation          Json?
+  prefered_payment_type PaymentType        @default(cash)
+  ratings               Rating[]           @relation("UserRatings")
+  comments              Comment[]          @relation("UserComments")
+  drivers_commented_on  Driver[]           @relation("UsersCommentsOnDrivers")
+  liked_comments        Comment[]          @relation("UserLikedComments")
+  rides                 Ride[]
+
+  // Push notifications 
+  push_tokens      PushNotificationToken[] @relation("UserPushTokens")
+  push_token_value String?                 @unique
+  push_token       PushNotificationToken?  @relation("UserCurrentPushToken", fields: [push_token_value], references: [token], onDelete: SetNull)
+}
+
+model PushNotificationToken {
+  token          String   @id
+  user_id        String
+  user           User     @relation("UserPushTokens", fields: [user_id], references: [id], onDelete: Cascade)
+  created_at     DateTime @default(now())
+  currently_used User?    @relation("UserCurrentPushToken")
+}
+
+model CloudPhotoDetails {
+  asset_id      String @id
+  public_id     String @unique
+  access_mode   String
+  folder        String
+  resource_type String
+  secure_url    String
+  signature     String
+  url           String
+  user_id       String @unique
+  user          User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model Driver {
+  licence_id      String    @id @default(uuid())
+  user            User      @relation("UserDriver", fields: [licence_id], references: [id], onDelete: Cascade)
+  cars            Car[]     @relation("CarOwner")
+  total_rating    Float     @default(0)
+  ratings         Rating[]  @relation("DriverRatings")
+  comments        Comment[] @relation("DriverComments")
+  users_commented User[]    @relation("UsersCommentsOnDrivers")
+  isAvailable     Boolean?  @default(true)
+  rides           Ride[]
+}
+
+model Car {
+  car_id            String    @id
+  car_type          CarType   @default(standard)
+  car_model         String
+  registration_date DateTime?
+  licence_id        String    @unique
+  driver            Driver    @relation("CarOwner", fields: [licence_id], references: [licence_id], onDelete: Cascade)
+  rides             Ride[]
+}
+
+enum CarType {
+  standard
+  premium
+  family
+  suv
+}
+
+model Rating {
+  licence_id String
+  driver     Driver @relation("DriverRatings", fields: [licence_id], references: [licence_id], onDelete: Cascade)
+  user_id    String
+  user       User   @relation("UserRatings", fields: [user_id], references: [id], onDelete: Cascade)
+
+  rating Float @default(1)
+
+  @@id([licence_id, user_id])
+}
+
+model Comment {
+  id   String @id @default(uuid())
+  text String @db.VarChar(500)
+
+  commented_at DateTime @default(now())
+  updated_at   DateTime @default(now())
+
+  user_id String
+  user    User   @relation("UserComments", fields: [user_id], references: [id], onDelete: Cascade)
+
+  licence_id String
+  driver     Driver @relation("DriverComments", fields: [licence_id], references: [licence_id], onDelete: Cascade)
+
+  liked_by User[] @relation("UserLikedComments")
+}
+
+// this class comes direclty from react-native-maps 
+model Address {
+  id                String  @id @default(uuid())
+  name              String?
+  formatted_address String?
+  place_id          String?
+  vicinity          String
+
+  /// [Point]
+  localisation Json
+
+  start_rides       Ride[] @relation("StartAddresses")
+  destination_rides Ride[] @relation("DestinationAddresses")
+}
+
+model Ride {
+  id String @id @default(uuid()) // either random UUID or ID of transaction 
+
+  /// [Point]
+  user_gps_localisation Json
+
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  driver_licence_id String?
+  driver            Driver? @relation(fields: [driver_licence_id], references: [licence_id], onDelete: Cascade)
+  // car used 
+  car_type          CarType @default(standard)
+  car_id            String?
+  car               Car?    @relation(fields: [car_id], references: [car_id], onDelete: Cascade)
+
+  // time stuff 
+  ordered_at  DateTime  @default(now())
+  starting_at DateTime?
+  arrived_at  DateTime?
+  total_time  String? // estimated time 
+
+  // travel stuff 
+  start_address_id       String
+  start_address          Address @relation("StartAddresses", fields: [start_address_id], references: [id], onDelete: Cascade)
+  destination_address_id String
+  destination_address    Address @relation("DestinationAddresses", fields: [destination_address_id], references: [id], onDelete: Cascade)
+  distance               Float // in KM 
+
+  // accepted by Driver 
+  isAccepted  Boolean   @default(false)
+  accepted_at DateTime?
+
+  // cancelled 
+  isCancelled         Boolean @default(false)
+  cause_cancellation  String? @db.VarChar(500)
+  isCancelledByDriver Boolean @default(false)
+
+  // Payment Stuff 
+  payment_type   PaymentType    @default(cash)
+  payment_status PaymentStatus
+  payment_intent PaymentIntent?
+  // payment_gateway PaymentGateway?
+  total          Float
+  currency       String         @default("usd")
+
+  // Ride Status
+  ride_status RideStatus @default(proposed)
+
+  // stripe_payment_intent StripePaymentIntent?
+
+  @@index([ordered_at], type: BTree)
+}
+
+model PaymentIntent {
+  id                    String
+  payment_gateway       PaymentGateway
+  stripe_payment_intent StripePaymentIntent?
+  ride_id               String?              @unique
+  ride                  Ride?                @relation(fields: [ride_id], references: [id], onDelete: Cascade)
+
+  @@id([id])
+}
+
+model StripePaymentIntent {
+  id                  String        @id
+  payment_intent      PaymentIntent @relation(fields: [id], references: [id], onDelete: Cascade)
+  client_secret       String
+  ephemeralKey_secret String
+  customer_id         String
+}
+
+enum Role {
+  ADMIN
+  REGULAR
+  DRIVER
+}
+
+enum RideStatus {
+  proposed
+  accepted
+  progress
+  cancelled
+  finished
+}
+
+enum PaymentStatus {
+  succeeded
+  cancelled
+  processing
+  refunded
+}
+
+enum PaymentType {
+  cash
+  card
+}
+
+enum PaymentGateway {
+  stripe
+}

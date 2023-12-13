@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "name": "mobile",
+    "slug": "mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/uber-logo.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/images/uber-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "googleServicesFile": "./google-services.json", 
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/uber-logo.png",
+        "backgroundColor": "#000000"
+      },
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.yanis540.mobile"
+    },
+    "web": {
+      "favicon": "./assets/images/uber-logo.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysPermission": "Allow to always use your location.",
+          "locationAlwaysAndWhenInUsePermission": "Allow to use your location.",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends."
+        }
+      ], 
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/uber-logo.png",
+          "color": "#ffffff"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "13e9da45-8fc5-4e5b-94d4-596af4da5b72"
+      }
+    }
+  }
+}

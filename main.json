@@ -1,0 +1,23 @@
+{
+  "access_mode": "public",
+  "asset_id": "1e6814574a8a4404ee056a61f8da1f35",
+  "bytes": 7345246,
+  "created_at": "2023-08-16T22:01:58Z",
+  "etag": "2cb8823b94a00b0dd99c5d68d4474d13",
+  "folder": "",
+  "format": "jpg",
+  "height": 4640,
+  "original_extension": "jpeg",
+  "original_filename": "random",
+  "placeholder": false,
+  "public_id": "g8gjonndamtokfkjci7y",
+  "resource_type": "image",
+  "secure_url": "https://res.cloudinary.com/dqfngnufu/image/upload/v1692223318/g8gjonndamtokfkjci7y.jpg",
+  "signature": "c18e71499d66d222d7eeeda9587a74b8aab2f23f",
+  "tags": [],
+  "type": "upload",
+  "url": "http://res.cloudinary.com/dqfngnufu/image/upload/v1692223318/g8gjonndamtokfkjci7y.jpg",
+  "version": 1692223318,
+  "version_id": "9049447a2c69ba273f18ddeaa51c0c8e",
+  "width": 3472
+} 

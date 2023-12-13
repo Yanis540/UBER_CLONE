@@ -1,0 +1,9 @@
+services:
+  backend: 
+    build: ./backend
+    container_name: backend_container 
+    ports:
+      - '5000:5000'
+    volumes:
+      #!you you can use a relative path here 
+      - ./backend:/backend 
